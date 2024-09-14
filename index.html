@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vue Store</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+
+<body>
+    <div id="app">
+        <header>
+            <nav class="navbar bg-dark border-bottom border-body" data-bs-theme="dark">
+                <div class="container">
+                    <a class="navbar-brand" href="/">Vue Store</a>
+                    <ul class="navbar-nav d-flex">
+                        <div class="d-flex flex-column" @click="visualizarCarrinho" role="button">
+                            <i class="bi bi-bag-heart" style="font-size: 2rem; color: #FFF;"></i>
+                            <span class="badge rounded-pill bg-danger">{{ totalNoCarrinho }}</span>
+                        </div>
+                    </ul>
+                </div>
+            </nav>
+        </header>
+        <main>
+            <div class="container">
+                <h1 class="my-3">Produtos</h1>
+                <div class="row g-2">
+                    <div class="col-md-3" v-for="(product, key) in products" :key="product.id">
+                        <div class="card" @click="showProduct(product.id)" role="button">
+                            <img :src="product.image" class="d-block object-fit-contain" :alt="product.title"
+                                style="max-height: 200px;">
+                            <div class="card-body">
+                                <h5 class="card-title">{{product.title}}</h5>
+                                <h4>{{product.price | currencyBRL}}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <div class="modal fade" id="modal_product" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+                <div class="modal-content">
+                    <template v-if="selectedProduct">
+                        <div class="modal-header">
+                            <h5 class="modal-title">{{selectedProduct.title}}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="d-flex flex-wrap">
+                                <div class="image p-4">
+                                    <img :src="selectedProduct.image" class="d-block object-fit-contain"
+                                        :alt="selectedProduct.title" style="max-height: 200px;">
+                                </div>
+                                <div class="info p-4">
+                                    <h5 class="card-title">{{selectedProduct.title}}</h5>
+                                    <h4>{{selectedProduct.price | currencyBRL}}</h4>
+                                    <p class="card-text">{{ selectedProduct.description }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                            <button type="button" class="btn btn-primary" @click="adicionarAoCarrinho()">Adicionar ao
+                                Carrinho</button>
+                        </div>
+                    </template>
+                    <template v-else>
+                        <div class="d-flex justify-content-center p-5">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Carregando...</span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="modal_carrinho" tabindex="-1">
+            <div class="modal-lg modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Produtos no carrinho</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <template v-if="carrinho.length">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Produto</th>
+                                        <th scope="col">Quantidade</th>
+                                        <th scope="col">Un.</th>
+                                        <th scope="col">Ação</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(produtoCarrinho, index) in carrinho" :key="produtoCarrinho.id">
+                                        <td>{{produtoCarrinho.title}}</td>
+                                        <td>{{produtoCarrinho.qtd}}</td>
+                                        <td>{{produtoCarrinho.price | currencyBRL}}</td>
+                                        <td>
+                                            <div class="btn-group" role="group" aria-label="Basic example">
+                                                <button type="button" class="btn btn-success"
+                                                    @click="atualizarQuantidade(index, 'adicionar')"
+                                                    title="Aumentar quantidade" v-if="produtoCarrinho.qtd > 0">
+                                                    <i class="bi bi-plus-square"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-warning"
+                                                    @click="atualizarQuantidade(index, 'subtrair')"
+                                                    title="Dimunir quantidade" v-if="produtoCarrinho.qtd > 1">
+                                                    <i class="bi bi-dash-square"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-danger"
+                                                    @click="atualizarQuantidade(index, 'remover')"
+                                                    title="Remover do carrinho" v-if="produtoCarrinho.qtd === 1">
+                                                    <i class="bi bi-x-square"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3" class="text-end">Total</td>
+                                        <td>{{carrinhoTotal | currencyBRL}}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </template>
+                        <template v-else>
+                            <div class="alert alert-primary" role="alert">
+                                Sem produtos no carrinho de compra
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="toast-container position-fixed top-0 start-50 translate-middle-x end-0 p-3">
+            <div class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive"
+                aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        {{ toastMessage }}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                        aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+    <script src="src/vue.js"></script>
+    <script>
+        const vm = new Vue({
+            el: '#app',
+            data: {
+                products: {},
+                productModal: null,
+                carrinhoModal: null,
+                toast: null,
+                toastMessage: '',
+                selectedProduct: false,
+                carrinho: [],
+            },
+            filters: {
+                currencyBRL: function (value) {
+                    if (!value) return;
+                    return value.toLocaleString('pt-BR', { style: "currency", currency: "BRL" })
+                }
+            },
+            computed: {
+                totalNoCarrinho() {
+                    return this.carrinho.reduce((acumulador, { qtd }) => {
+                        return acumulador + qtd
+                    }, 0)
+                },
+                carrinhoTotal() {
+                    return this.carrinho.reduce((acumulador, { price, qtd }) => {
+                        return acumulador + (qtd * price)
+                    }, 0)
+                }
+            },
+            methods: {
+                carregarProdutos() {
+                    fetch('https://fakestoreapi.com/products')
+                        .then(res => res.json())
+                        .then(json => {
+                            this.products = json;
+                        })
+                },
+                buscarProdutoPorId(id) {
+                    setTimeout(() => {
+                        fetch(`https://fakestoreapi.com/products/${id}`)
+                            .then(res => res.json())
+                            .then(json => {
+                                this.selectedProduct = json;
+                            })
+                    }, 400)
+                },
+                modalShow() {
+                    this.productModal.show();
+                },
+                modalHide() {
+                    this.productModal.hide();
+                },
+                showToast() {
+                    this.toast.show();
+                },
+                hideToast() {
+                    this.toast.hide();
+                },
+                showProduct(id) {
+                    this.buscarProdutoPorId(id);
+                    this.modalShow();
+                },
+                adicionarAoCarrinho() {
+                    let indexProduct = this.carrinho.findIndex(item => item.id === this.selectedProduct.id);
+
+                    if (indexProduct === -1) {
+                        this.selectedProduct.qtd = 1;
+                        this.carrinho.push({ ...this.selectedProduct });
+                    } else {
+                        this.carrinho[indexProduct].qtd += 1;
+                    }
+                    this.toastMessage = this.selectedProduct.title + ' adicionado ao carrinho';
+                    this.showToast();
+                },
+                atualizarQuantidade(index, acao) {
+                    if (acao === "adicionar") {
+                        this.carrinho[index].qtd += 1;
+                    } else if (acao === "subtrair") {
+                        this.carrinho[index].qtd -= 1;
+                    } else {
+                        this.carrinho.splice(index, 1);
+                    }
+                },
+                visualizarCarrinho() {
+                    this.carrinhoModal.show();
+                }
+            },
+            created() {
+                this.carregarProdutos();
+            },
+            mounted() {
+                this.productModal = new bootstrap.Modal('#modal_product');
+                this.carrinhoModal = new bootstrap.Modal('#modal_carrinho');
+                this.toast = new bootstrap.Toast('.toast');
+
+                this.productModal._element.addEventListener('hidden.bs.modal', () => {
+                    this.selectedProduct = false;
+                    this.hideToast();
+                })
+            }
+        }); 
+    </script>
+</body>
+
+</html>

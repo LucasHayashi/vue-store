@@ -188,6 +188,14 @@
                     }, 0)
                 }
             },
+            watch: {
+                carrinho: {
+                    handler: function (curr) {
+                        window.localStorage.carrinho = JSON.stringify(curr);
+                    },
+                    deep: true
+                }
+            },
             methods: {
                 carregarProdutos() {
                     fetch('https://fakestoreapi.com/products')
@@ -244,10 +252,16 @@
                 },
                 visualizarCarrinho() {
                     this.carrinhoModal.show();
+                },
+                carregarCarrinho() {
+                    if (window.localStorage.carrinho) {
+                        this.carrinho = JSON.parse(window.localStorage.carrinho)
+                    }
                 }
             },
             created() {
                 this.carregarProdutos();
+                this.carregarCarrinho();
             },
             mounted() {
                 this.productModal = new bootstrap.Modal('#modal_product');

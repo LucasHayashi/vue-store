@@ -30,8 +30,8 @@
                 <h1 class="my-3">Produtos</h1>
                 <div class="row g-2">
                     <div class="col-md-3" v-for="(product, key) in products" :key="product.id">
-                        <div class="card" @click="showProduct(product.id)" role="button">
-                            <img :src="product.image" class="d-block object-fit-contain" :alt="product.title"
+                        <div class="card mx-auto" @click="showProduct(product.id)" role="button">
+                            <img :src="product.image" class="d-block object-fit-contain img-fluid p-2" :alt="product.title"
                                 style="max-height: 200px;">
                             <div class="card-body">
                                 <h5 class="card-title">{{product.title}}</h5>
@@ -52,8 +52,8 @@
                         </div>
                         <div class="modal-body">
                             <div class="d-flex flex-wrap">
-                                <div class="image p-4">
-                                    <img :src="selectedProduct.image" class="d-block object-fit-contain"
+                                <div class="image mx-auto p-4">
+                                    <img :src="selectedProduct.image" class="d-block object-fit-contain img-fluid"
                                         :alt="selectedProduct.title" style="max-height: 200px;">
                                 </div>
                                 <div class="info p-4">
